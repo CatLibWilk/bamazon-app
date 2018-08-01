@@ -107,7 +107,7 @@ function addInventory(){
                     type: "input",
                     message: "Select Product ID for item you wish to perform stock update function on: ",
                     validate: function(value) {
-                        if (isNaN(value) === false && value <= res.length) {
+                        if (isNaN(value) === false) {
                           return true;
                         }
                         return false;
