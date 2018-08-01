@@ -1,18 +1,13 @@
 var mysql = require("mysql");
 var inquirer = require("inquirer");
+var config = require("./config.js");
 
 var catIndex = [];
 var selectedItem = 0;
 var selectedAmount = 0;
 var returnedStock = 0;
 
-var connection = mysql.createConnection({
-    host: "localhost",
-    port: 3306,
-    user: "root",
-    password: "root",
-    database: "bamazon"
-  });
+var connection = config;
   
 
   connection.connect(function(err) {
