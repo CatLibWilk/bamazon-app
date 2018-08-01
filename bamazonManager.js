@@ -54,7 +54,12 @@ function viewProducts(){
     });
 }
 function lowInventory(){
-  console.log(`running low`);
+    connection.query("SELECT * FROM products WHERE stock_quantity < 10 ORDER BY department_name", function(err, res){
+        if (err) throw err;
+        console.log(`Products currently stocked at low level (Less than 10 units in stock)`);
+        console.log(`---------------------------`);
+        res.forEach(pass => console.log(`Product #${pass.item_id}: ${pass.product_name} - amt in stock: ${pass.stock_quantity} --- Department: ${pass.department_name}`));
+    });
 }
 function addInventory(){
   console.log(`running inventoryadd`);
