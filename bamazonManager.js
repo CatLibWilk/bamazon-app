@@ -3,9 +3,9 @@ var inquirer = require("inquirer");
 var config = require("./config.js");
 
 var catIndex = [];
-var selectedItem = 0;
-var selectedAmount = 0;
-var returnedStock = 0;
+var updateId = 0;
+var updateItemName = "";
+var updateItemCurrentStock = 0;
 
 var connection = config;
   
@@ -62,8 +62,96 @@ function lowInventory(){
     });
 }
 function addInventory(){
-  console.log(`running inventoryadd`);
-}
+    connection.query("SELECT * FROM products", function(err, res){
+        if (err) throw err;
+  
+        console.log(`All Products:`);
+        console.log(`-------------------`);
+  
+        res.forEach(pass => console.log(`${pass.item_id} - ${pass.product_name}: $${pass.price} - Available: ${pass.stock_quantity}`));
+        res.forEach(pass => catIndex.push(pass.product_name));
+        inquirer
+            .prompt([
+                {
+                    name: "select",
+                    type: "input",
+                    message: "Select Product ID for item you wish to perform stock update function on: ",
+                    validate: function(value) {
+                        if (isNaN(value) === false && value <= res.length) {
+                          return true;
+                        }
+                        return false;
+                      }
+                }
+            ]).then(function(response){
+                console.log(`You've selected ${res[response.select-1].product_name} to update`);
+                updateId = response.select;
+                updateItemName = res[response.select-1].product_name;
+                updateItemCurrentStock = res[response.select-1].stock_quantity;
+                inquirer
+                    .prompt([
+                        {
+                            name: "amount",
+                            type: "input",
+                            message: "How many units would you like to add/remove to/from the stock?: ",
+                            validate: function(value){
+                                if(isNaN(value) === false){
+                                    return true;
+                                }
+                                return false;
+                            }
+                        }
+                    ]).then(function(response){
+                        console.log(`Please wait while the system adds/removes ${response.amount} unit(s) to the stock for ${updateItemName}...`);
+                        connection.query("UPDATE products SET ? WHERE ?",
+                        [
+                            {
+                                stock_quantity: updateItemCurrentStock + parseInt(response.amount)
+                            },
+                            {
+                                item_id: updateId
+                            }
+                        ]
+                    , function(err, res){
+                        if (err) throw err;
+                        console.log(res);
+                        connection.query("SELECT product_name, stock_quantity FROM products WHERE ?",
+                            {
+                                item_id: updateId
+                            },
+                            function(err, res){
+                                if (err) throw err;
+                                console.log(`Action complete. Stock quantity of ${res[0].product_name} is now ${res[0].stock_quantity} units(s).`);
+                                inquirer   
+                                    .prompt([
+                                        {
+                                            name: "nextAction",
+                                            type: "list",
+                                            message: "What would you like to do next?",
+                                            choices: ["Update another product", "Return to main menu", "Exit manager portal"]
+                                        }
+                                    ]).then(function(response){
+                                        switch(response.nextAction){
+                                            case "Update another product":
+                                                addInventory()
+                                                break;
+                                            case "Return to main menu":
+                                                initialize()
+                                                break;
+                                            case "Exit manager portal":
+                                                connection.end()
+                                                break;
+                                            default: initialize();
+                                        };
+                                    });
+                            }
+                        )
+                    });
+                    });
+            });
+    })//connection query end
+};
+
 function newProduct(){
   console.log(`running product add`);
 }
