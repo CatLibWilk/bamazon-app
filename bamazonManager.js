@@ -7,6 +7,8 @@ var updateId = 0;
 var updateItemName = "";
 var updateItemCurrentStock = 0;
 
+var productAddName = "";
+
 var connection = config;
   
 
@@ -151,7 +153,90 @@ function addInventory(){
             });
     })//connection query end
 };
-
 function newProduct(){
-  console.log(`running product add`);
-}
+    inquirer
+        .prompt([
+            {
+                name: "product",
+                input: "input",
+                message: "what is the name of the product to be added?",
+            }
+        ]).then(function(response){
+            connection.query("SELECT product_name FROM products WHERE ?",
+                {
+                    product_name: response.product
+                },
+                function(err, res){
+                    if (err) throw err;
+                    if(res.length>0){
+                        console.log(`Sorry, ${res[0].product_name} is already in the inventory. Please choose a unique name, or update the stock of the existing inventory item.`)
+                        newProduct();
+                    }else{
+                        productAddName = response.product;
+                        addUniqueProduct();
+                    };
+                }
+            )
+        }); //then function for name check end
+    function addUniqueProduct(){
+        inquirer
+            .prompt([
+                {
+                    name: "department",
+                    type: "input",
+                    message: "What department should this product be listed under?: "
+                },
+                {
+                    name: "price",
+                    type: "input",
+                    message: "What is the price of this product?: "
+                },
+                {
+                    name: "stock",
+                    type: "input",
+                    message: "How many units of this product are in stock?: "
+                }
+            ]).then(function(response){
+                connection.query("INSERT INTO products SET ?",
+                    {
+                        product_name: productAddName,
+                        department_name: response.department, 
+                        price: response.price, 
+                        stock_quantity: response.stock
+                    },
+                    function(err, res){
+                        if (err) throw err;
+                        connection.query("SELECT * FROM products WHERE stock_quantity > 0", function(err, res){
+                            if (err) throw err;
+                            console.log(`Updated current stock`);
+                            console.log(`---------------------`);
+                            res.forEach(pass => console.log(`Product #: ${pass.item_id} - ${pass.product_name} -- Price: $${pass.price} --- in-stock amount: ${pass.stock_quantity} || Department: ${pass.department_name}`));
+                            inquirer    
+                                .prompt([
+                                    {
+                                        name: "continue",
+                                        type: "list",
+                                        message: "What action would you like to take next?",
+                                        choices: ["Add another product", "Return to main menu", "Exit manager portal"]
+                                    }
+                                ]).then(function(response){
+                                    switch(response.continue){
+                                        case "Add another product":
+                                            newProduct()
+                                            break;
+                                        case "Return to main menu":
+                                            initialize()
+                                            break;
+                                        case "Exit manager portal":
+                                            connection.end()
+                                            break;
+                                        default:
+                                            initialize();
+                                    }
+                                });
+                        });
+                    }
+                );
+            });
+    };
+};
