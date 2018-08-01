@@ -36,37 +36,43 @@ var connection = config;
           }
         ]).then(function(response){
           selectedItem = response.choice;
-          var respIndex = parseInt(response.choice-1);
-
+          connection.query("SELECT * FROM products WHERE ?",
+            {
+              item_id: response.choice
+            },
+            function(err, res2){
+              if (err) throw err;
+        
           inquirer
             .prompt([
               {
               name: "amount",
               type: "input",
-              message: `You've selected for purchase ${catIndex[respIndex]}, how many units would you like to purchase?`
+              message: `You've selected for purchase ${res2[0].product_name}, how many units would you like to purchase?`
               }
             ]).then(function(response){
-              connection.query("SELECT stock_quantity FROM products WHERE ?",
+              connection.query("SELECT stock_quantity, product_name FROM products WHERE ?",
               {
                 item_id: selectedItem
               },
-              function(err, res){
+              function(err, res2){
                 if (err) throw err;
-                returnedStock = res[0].stock_quantity;
+                returnedStock = res2[0].stock_quantity;
                 selectedAmount = parseInt(response.amount);
                 
                 if(parseInt(response.amount) > parseInt(returnedStock)){
-                  console.log(`Sorry, we currently dont have enough ${catIndex[selectedItem-1]} in stock to fill your order, please select another quantity, or another item from our store.`);
+                  console.log(`Sorry, we currently dont have enough ${res2[0].product_name} in stock to fill your order, please select another quantity, or another item from our store.`);
                   setTimeout(getProducts, 2000);
                 }else{
-                  console.log(`Great! Please wait while we process your order for ${response.amount} order(s) of ${catIndex[selectedItem-1]}`);
+                  console.log(`Great! Please wait while we process your order for ${response.amount} order(s) of ${res2[0].product_name}`);
                   setTimeout(placeOrder, 2000);
                 }
               }
             );
 
             });
-        });
+          });
+        });///then function and select * from ~ line 38
     });
   };
    
@@ -89,16 +95,16 @@ var connection = config;
   };
 
   function billGen(){
-    connection.query("SELECT price FROM products WHERE ?",
+    connection.query("SELECT price, product_name FROM products WHERE ?",
     {
       item_id: selectedItem
     },
-    function(err, res){
+    function(err, res3){
       if (err) throw err;
-      var itemPrice = res[0].price;
+      var itemPrice = res3[0].price;
       var bill = itemPrice * selectedAmount;
 
-      console.log(`Total payment due for ${selectedAmount} order(s) of ${catIndex[selectedItem-1]}: $${bill}`);
+      console.log(`Total payment due for ${selectedAmount} order(s) of ${res3[0].product_name}: $${bill}`);
       repeat();
     }
   )
