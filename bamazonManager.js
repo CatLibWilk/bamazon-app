@@ -12,12 +12,12 @@ var productAddName = "";
 var connection = config;
   
 
-  connection.connect(function(err) {
+connection.connect(function(err) {
     if (err) throw err;
     initialize();
-  });
+});
 
-  function initialize(){
+function initialize(){
       console.log(`Welcome to the Bamazon Manager Portal`);
       console.log(`-------------------------------------`);
       inquirer.prompt([
@@ -25,7 +25,7 @@ var connection = config;
               name: "input",
               type:"list",
               message: "What operation would you like to run?",
-              choices: ["View Products for Sale", "View Low Inventory", "Add to Inventory", "Add New Product"]
+              choices: ["View Products for Sale", "View Low Inventory", "Add to Inventory", "Add New Product", "Exit manager portal"]
           }
       ]).then(function(response){
         switch(response.input){
@@ -41,18 +41,33 @@ var connection = config;
             case "Add New Product":
                 newProduct();
                 break;
+            case "Exit manager portal":
+                connection.end()
+                break;
             default: initialize();
         }
       });
-  };
-
-
+};
 function viewProducts(){
     connection.query("SELECT * FROM products WHERE stock_quantity > 0 ORDER BY department_name", function(err, res){
         if (err) throw err;
         console.log(`Products Currently In-Stock`);
         console.log(`---------------------------`);
         res.forEach(pass => console.log(`Product #${pass.item_id}: ${pass.product_name}, $${pass.price} - amt in stock: ${pass.stock_quantity} --- Department: ${pass.department_name}`));
+    
+        inquirer   
+            .prompt([{
+                name: "continue",
+                type: "list",
+                message: "Return to main menu?",
+                choices: ["Yes", "No, exit manager portal"]
+            }]).then(function(response){
+                if(response.continue === "Yes"){
+                    initialize();
+                }else{
+                    connection.end();
+                }
+            });
     });
 }
 function lowInventory(){
@@ -61,6 +76,19 @@ function lowInventory(){
         console.log(`Products currently stocked at low level (Less than 10 units in stock)`);
         console.log(`---------------------------`);
         res.forEach(pass => console.log(`Product #${pass.item_id}: ${pass.product_name} - amt in stock: ${pass.stock_quantity} --- Department: ${pass.department_name}`));
+        inquirer   
+            .prompt([{
+                name: "continue",
+                type: "list",
+                message: "Return to main menu?",
+                choices: ["Yes", "No, exit manager portal"]
+            }]).then(function(response){
+                if(response.continue === "Yes"){
+                    initialize();
+                }else{
+                    connection.end();
+                }
+            });
     });
 }
 function addInventory(){
@@ -116,7 +144,6 @@ function addInventory(){
                         ]
                     , function(err, res){
                         if (err) throw err;
-                        console.log(res);
                         connection.query("SELECT product_name, stock_quantity FROM products WHERE ?",
                             {
                                 item_id: updateId
