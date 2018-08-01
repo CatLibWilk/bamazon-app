@@ -24,7 +24,7 @@ var connection = config;
       console.log(`-------------------`);
       console.log(`Our Products:`);
 
-      res.forEach(pass => console.log(`${pass.item_id} - ${pass.product_name}`));
+      res.forEach(pass => console.log(`${pass.item_id} - ${pass.product_name}: $${pass.price} - Available: ${pass.stock_quantity}`));
       res.forEach(pass => catIndex.push(pass.product_name));
 
       inquirer
