@@ -114,10 +114,14 @@ function addInventory(){
                       }
                 }
             ]).then(function(response){
-                console.log(`You've selected ${res[response.select-1].product_name} to update`);
-                updateId = response.select;
-                updateItemName = res[response.select-1].product_name;
-                updateItemCurrentStock = res[response.select-1].stock_quantity;
+                connection.query(`SELECT * FROM products WHERE item_id=${response.select}`, function(err, res4){
+                    if(err) throw err;
+
+                console.log(`You've selected ${res4[0].product_name} to update`);
+                updateId = res4[0].item_id;
+                updateItemName = res4[0].product_name;
+                updateItemCurrentStock = res4[0].stock_quantity;
+                
                 inquirer
                     .prompt([
                         {
@@ -177,6 +181,7 @@ function addInventory(){
                         )
                     });
                     });
+                });
             });
     })//connection query end
 };
