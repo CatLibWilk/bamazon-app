@@ -16,3 +16,6 @@ This app requires a config.js file in order to be configured to communicate with
           });
 
         module.exports = connection;
+        
+## Sandboxing
+If you would like to test the bamazon application, you can use the "test_db_generator.sql" script in your mysql workspace to generate a database with the appropriate table structure.  Be sure to reflect database name, host path, port and password information in your config.js file.
